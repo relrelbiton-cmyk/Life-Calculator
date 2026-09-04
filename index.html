@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Life Calculator</title>
   
-  <!-- טעינת ספריות ליבה -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -40,32 +39,171 @@
       red: "#FF5C7A",
     };
 
-    function Button({ children, onClick, variant = "primary" }) {
+    const font = {
+      display: "'Space Grotesk', sans-serif",
+      body: "'Inter', sans-serif",
+      mono: "'JetBrains Mono', monospace",
+    };
+
+    const salaryScenarios = [
+      {
+        id: "s1",
+        name: "Alex",
+        age: 32,
+        avatar: "🧑‍💻",
+        job: "Software Engineer",
+        location: "Berlin, Germany",
+        experience: "7 years",
+        education: "BSc Computer Science",
+        industry: "Fintech scale-up",
+        companySize: "~180 employees",
+        lifestyle: "Rents a 1-bedroom apartment, cycles to work, takes 2 trips abroad a year",
+        schedule: "Standard 40h/week, hybrid",
+        range: [5400, 6600],
+        explain: "Mid-senior engineers at funded fintech scale-ups in Berlin typically land in this band — experience and company stage matter more here than the city's average salary.",
+      },
+      {
+        id: "s2",
+        name: "Priya",
+        age: 26,
+        avatar: "👩‍⚕️",
+        job: "Registered Nurse",
+        location: "Manchester, UK",
+        experience: "3 years",
+        education: "BSc Nursing",
+        industry: "NHS Hospital Trust",
+        companySize: "Public sector, ~4,000 staff trust",
+        lifestyle: "Shares a flat with a roommate, works rotating shifts",
+        schedule: "37.5h/week, rotating shifts + occasional overtime",
+        range: [2350, 2650],
+        explain: "NHS nursing pay bands are public and fairly narrow at this experience level — shift allowances add a bit on top of base band pay.",
+      },
+      {
+        id: "s3",
+        name: "Marco",
+        age: 41,
+        avatar: "👨‍🍳",
+        job: "Restaurant Owner",
+        location: "Lisbon, Portugal",
+        experience: "12 years running the business",
+        education: "Culinary school",
+        industry: "Independent restaurant, 40 covers",
+        companySize: "Owner-operator, 9 staff",
+        lifestyle: "Owns his apartment, reinvests heavily into the business",
+        schedule: "60+ hours/week, no fixed schedule",
+        range: [1800, 3200],
+        explain: "Owner take-home from a small independent restaurant swings a lot month to month — this range reflects a stable-but-modest year.",
+      },
+      {
+        id: "s4",
+        name: "Yuki",
+        age: 29,
+        avatar: "👩‍🎨",
+        job: "UX Designer",
+        location: "Austin, Texas",
+        experience: "5 years",
+        education: "BFA Design",
+        industry: "Series B SaaS startup",
+        companySize: "~90 employees",
+        lifestyle: "Rents a townhouse with a partner, drives a used car",
+        schedule: "Standard 40h/week, remote-first",
+        range: [7800, 9200],
+        explain: "US tech salaries at funded startups run well above the same role in most other countries — Austin specifically has become a strong secondary tech market.",
+      },
+      {
+        id: "s5",
+        name: "Fatima",
+        age: 35,
+        avatar: "👩‍🏫",
+        job: "High School Teacher",
+        location: "Toronto, Canada",
+        experience: "9 years",
+        education: "B.Ed",
+        industry: "Public school board",
+        companySize: "Public sector",
+        lifestyle: "Owns a condo with a mortgage, one child",
+        schedule: "Standard school hours + grading/prep at home",
+        range: [5100, 5700],
+        explain: "Public teacher pay follows a fixed grid based on years of experience and education level — very little variance for the same credentials.",
+      }
+    ];
+
+    const hotelScenarios = [
+      {
+        id: "h1",
+        guestName: "Sarah",
+        nights: 5,
+        pricePerNight: 240,
+        issue: "Her flight was delayed 9 hours and the room wasn't ready when she finally arrived at 1am.",
+        guestType: "Returning guest, has stayed 4 times before",
+        range: [8, 15],
+        explain: "A single-night inconvenience on a multi-night stay, from a loyal repeat guest, typically nets a partial-night or small percentage gesture.",
+      },
+      {
+        id: "h2",
+        guestName: "Daniel",
+        nights: 2,
+        pricePerNight: 180,
+        issue: "The air conditioning in his room broke on the first night and it took maintenance until the next afternoon to fix.",
+        guestType: "First-time guest, booked via a discount site",
+        range: [15, 25],
+        explain: "A full-night functional failure on a short 2-night stay is a bigger share of the total experience — most hotels offer close to a full comped night.",
+      }
+    ];
+
+    function scoreFromRange(guess, [lo, hi]) {
+      if (guess >= lo && guess <= hi) return 100;
+      const edge = guess < lo ? lo : hi;
+      const distance = Math.abs(guess - edge);
+      const pctOff = distance / edge;
+      return Math.max(0, Math.round(100 - pctOff * 200));
+    }
+
+    function Button({ children, onClick, variant = "primary", style = {} }) {
       const styles = {
-        primary: { background: C.blue, color: "#fff" },
+        primary: { background: C.blue, color: "#1A1200" },
         amber: { background: C.amber, color: "#1A1200" },
         ghost: { background: "transparent", color: C.text, border: `1px solid ${C.border}` }
       };
       return (
-        <button 
-          onClick={onClick} 
-          style={{ padding: "12px 24px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 15, ...styles[variant] }}>
+        <button onClick={onClick} style={{ padding: "12px 24px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 15, ...styles[variant], ...style }}>
           {children}
         </button>
       );
     }
 
-    function Card({ children }) {
+    function Card({ children, style = {} }) {
       return (
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 28, marginTop: 20 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 28, ...style }}>
           {children}
+        </div>
+      );
+    }
+
+    function FactRow({ emoji, label, value }) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+          <span style={{ fontSize: 18 }}>{emoji}</span>
+          <span style={{ fontSize: 14, color: C.muted, width: 110 }}>{label}</span>
+          <span style={{ fontSize: 15, color: C.text, fontWeight: 500 }}>{value}</span>
         </div>
       );
     }
 
     function App() {
       const [view, setView] = useState("home");
-      const [guess, setGuess] = useState(6000);
+      const [salIdx, setSalIdx] = useState(0);
+      const [salGuess, setSalGuess] = useState(5500);
+      const [salSubmitted, setSalSubmitted] = useState(false);
+      
+      const [hotIdx, setHotIdx] = useState(0);
+      const [hotGuess, setHotGuess] = useState(10);
+      const [hotSubmitted, setHotSubmitted] = useState(false);
+
+      const [xp, setXp] = useState(120);
+
+      const curSal = salaryScenarios[salIdx];
+      const curHot = hotelScenarios[hotIdx];
 
       return (
         <div style={{ minHeight: "100vh", background: C.bg, color: C.text }}>
@@ -74,38 +212,124 @@
               🧮 Life Calculator
             </div>
             <div style={{ display: "flex", gap: 15 }}>
-              <span>🔥 3</span>
-              <span>⭐ 120 XP</span>
+              <span>🔥 3 Streak</span>
+              <span>⭐ {xp} XP</span>
             </div>
           </header>
 
           <main style={{ maxWidth: 800, margin: "40px auto", padding: "0 20px" }}>
-            {view === "home" ? (
-              <div style={{ textAlign: "center" }}>
-                <h1 style={{ fontSize: 44, fontWeight: 700 }}>Can you calculate real life?</h1>
-                <p style={{ color: C.muted, fontSize: 18, marginTop: 10 }}>Money, negotiations and everyday decisions turned into a game.</p>
-                <div style={{ marginTop: 24 }}>
-                  <Button variant="amber" onClick={() => setView("salary")}>Start Salary Challenge ➡️</Button>
-                </div>
-              </div>
-            ) : (
-              <Card>
-                <Button variant="ghost" onClick={() => setView("home")}>⬅️ Back</Button>
-                <h2 style={{ fontSize: 24, marginTop: 15 }}>💰 Salary Challenge</h2>
-                <p style={{ color: C.muted }}>How much does Alex (Software Engineer, Berlin) earn?</p>
-                
-                <div style={{ margin: "30px 0", textAlign: "center" }}>
-                  <div style={{ fontSize: 36, fontWeight: 700, color: C.amber }}>${guess.toLocaleString()}</div>
-                  <input 
-                    type="range" min="3000" max="10000" step="100" value={guess} 
-                    onChange={(e) => setGuess(Number(e.target.value))}
-                    style={{ width: "100%", marginTop: 15, accentColor: C.amber }}
-                  />
+            {view === "home" && (
+              <div>
+                <div style={{ textAlign: "center", marginBottom: 40 }}>
+                  <h1 style={{ fontSize: 44, fontWeight: 700, fontFamily: font.display }}>Can you calculate real life?</h1>
+                  <p style={{ color: C.muted, fontSize: 18, marginTop: 10 }}>Money, negotiations and everyday decisions turned into a game.</p>
                 </div>
 
-                <Button variant="amber" onClick={() => alert("Correct range: $5,400 - $6,600!")} style={{ width: "100%" }}>
-                  🔒 Lock In My Guess
-                </Button>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                  <Card style={{ cursor: "pointer" }} onClick={() => { setView("salary"); setSalSubmitted(false); }}>
+                    <span style={{ background: C.amber, color: "#000", fontSize: 12, fontWeight: 700, padding: "3px 8px", borderRadius: 10 }}>CHALLENGE</span>
+                    <h3 style={{ fontSize: 22, marginTop: 12 }}>💰 Salary Challenge</h3>
+                    <p style={{ color: C.muted, marginTop: 6, fontSize: 14 }}>Guess real monthly incomes based on full career and lifestyle profiles.</p>
+                  </Card>
+
+                  <Card style={{ cursor: "pointer" }} onClick={() => { setView("hotel"); setHotSubmitted(false); }}>
+                    <span style={{ background: C.amber, color: "#000", fontSize: 12, fontWeight: 700, padding: "3px 8px", borderRadius: 10 }}>CHALLENGE</span>
+                    <h3 style={{ fontSize: 22, marginTop: 12 }}>🏨 Hotel Refund</h3>
+                    <p style={{ color: C.muted, marginTop: 6, fontSize: 14 }}>Negotiate compensation like an experienced hotel front desk manager.</p>
+                  </Card>
+                </div>
+              </div>
+            )}
+
+            {view === "salary" && (
+              <Card>
+                <Button variant="ghost" onClick={() => setView("home")} style={{ marginBottom: 20 }}>⬅️ Back Home</Button>
+                
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h2 style={{ fontSize: 24 }}>💰 Salary Challenge ({salIdx + 1}/{salaryScenarios.length})</h2>
+                  <span style={{ color: C.muted }}>{curSal.avatar} {curSal.name}</span>
+                </div>
+
+                <div style={{ margin: "20px 0" }}>
+                  <FactRow emoji="🧑‍💻" label="Profile" value={`${curSal.name}, ${curSal.age} yrs old`} />
+                  <FactRow emoji="💼" label="Role" value={curSal.job} />
+                  <FactRow emoji="📍" label="Location" value={curSal.location} />
+                  <FactRow emoji="🎓" label="Education" value={curSal.education} />
+                  <FactRow emoji="🏢" label="Company" value={`${curSal.industry} (${curSal.companySize})`} />
+                  <FactRow emoji="🏠" label="Lifestyle" value={curSal.lifestyle} />
+                </div>
+
+                {!salSubmitted ? (
+                  <div style={{ marginTop: 30, textAlign: "center" }}>
+                    <p style={{ fontSize: 16, color: C.muted }}>Estimate monthly net earnings:</p>
+                    <div style={{ fontSize: 40, fontWeight: 700, color: C.amber, fontFamily: font.mono, margin: "10px 0" }}>
+                      ${salGuess.toLocaleString()} / mo
+                    </div>
+                    <input 
+                      type="range" min="1000" max="15000" step="100" value={salGuess} 
+                      onChange={(e) => setSalGuess(Number(e.target.value))}
+                      style={{ width: "100%", accentColor: C.amber }}
+                    />
+                    <Button variant="amber" onClick={() => { setSalSubmitted(true); setXp(x => x + scoreFromRange(salGuess, curSal.range)); }} style={{ width: "100%", marginTop: 20 }}>
+                      🔒 Lock In Guess
+                    </Button>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 25, background: C.raised, padding: 20, borderRadius: 16, textAlign: "center" }}>
+                    <h3 style={{ fontSize: 22, color: scoreFromRange(salGuess, curSal.range) > 70 ? C.green : C.amber }}>
+                      Score: {scoreFromRange(salGuess, curSal.range)} / 100
+                    </h3>
+                    <p style={{ marginTop: 8 }}>Actual range: <strong>${curSal.range[0]} - ${curSal.range[1]}</strong></p>
+                    <p style={{ color: C.muted, fontSize: 14, marginTop: 12 }}>{curSal.explain}</p>
+                    
+                    {salIdx < salaryScenarios.length - 1 ? (
+                      <Button variant="amber" onClick={() => { setSalIdx(i => i + 1); setSalSubmitted(false); }} style={{ marginTop: 15 }}>
+                        Next Person ➡️
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" onClick={() => setView("home")} style={{ marginTop: 15 }}>
+                        Finish Challenge 🎉
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {view === "hotel" && (
+              <Card>
+                <Button variant="ghost" onClick={() => setView("home")} style={{ marginBottom: 20 }}>⬅️ Back Home</Button>
+                
+                <h2 style={{ fontSize: 24 }}>🏨 Hotel Refund Manager</h2>
+                <div style={{ margin: "20px 0", background: C.raised, padding: 20, borderRadius: 16 }}>
+                  <p><strong>Guest:</strong> {curHot.guestName} ({curHot.guestType})</p>
+                  <p><strong>Stay:</strong> {curHot.nights} nights @ ${curHot.pricePerNight}/night</p>
+                  <p style={{ marginTop: 10, color: C.amber }}><strong>Issue:</strong> "{curHot.issue}"</p>
+                </div>
+
+                {!hotSubmitted ? (
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ color: C.muted }}>What percentage refund gesture would you offer?</p>
+                    <div style={{ fontSize: 40, fontWeight: 700, color: C.amber, fontFamily: font.mono, margin: "10px 0" }}>
+                      {hotGuess}%
+                    </div>
+                    <input 
+                      type="range" min="0" max="50" step="1" value={hotGuess} 
+                      onChange={(e) => setHotGuess(Number(e.target.value))}
+                      style={{ width: "100%", accentColor: C.amber }}
+                    />
+                    <Button variant="amber" onClick={() => { setHotSubmitted(true); setXp(x => x + scoreFromRange(hotGuess, curHot.range)); }} style={{ width: "100%", marginTop: 20 }}>
+                      Submit Offer
+                    </Button>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 20, background: C.raised, padding: 20, borderRadius: 16, textAlign: "center" }}>
+                    <h3 style={{ fontSize: 22, color: C.green }}>Score: {scoreFromRange(hotGuess, curHot.range)} / 100</h3>
+                    <p style={{ marginTop: 8 }}>Standard industry compensation: <strong>{curHot.range[0]}% - {curHot.range[1]}%</strong></p>
+                    <p style={{ color: C.muted, fontSize: 14, marginTop: 12 }}>{curHot.explain}</p>
+                    <Button variant="ghost" onClick={() => setView("home")} style={{ marginTop: 15 }}>Back to Home</Button>
+                  </div>
+                )}
               </Card>
             )}
           </main>
@@ -113,8 +337,7 @@
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
