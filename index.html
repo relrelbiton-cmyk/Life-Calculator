@@ -133,7 +133,7 @@ function verdictForScore(score) {
 }
 
 /* ---------------------------------------------------------
-   UI COMPONENTS
+   SHARED UI PRIMITIVES
 --------------------------------------------------------- */
 function Badge({ children, tone = "blue" }) {
   const map = {
@@ -244,6 +244,19 @@ function NumberField({ label, value, onChange, prefix, suffix }) {
   );
 }
 
+function ResultGrid({ items }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(items.length, 3)}, 1fr)`, gap: 14, marginTop: 24 }}>
+      {items.map(([l, v]) => (
+        <div key={l} style={{ background: C.raised, borderRadius: 12, padding: 14 }}>
+          <div style={{ fontFamily: font.body, fontSize: 12, color: C.muted }}>{l}</div>
+          <BigNumber value={v} size={17} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ChallengeShell({ children, onBack, title, tone = "amber" }) {
   return (
     <div style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 64px" }}>
@@ -258,53 +271,272 @@ function ChallengeShell({ children, onBack, title, tone = "amber" }) {
   );
 }
 
-/* ---------------------------------------------------------
-   APP MAIN
---------------------------------------------------------- */
-export default function App() {
-  const [guess, setGuess] = useState(5000);
-  const [revealed, setRevealed] = useState(false);
-  const scenario = salaryScenarios[0];
-
-  const score = scoreFromRange(guess, scenario.range);
-  const verdict = verdictForScore(score);
+function RevealScreen({
+  guessLabel,
+  rangeLabel,
+  score,
+  verdict,
+  explain,
+  revealCta,
+  onPlayAgain,
+  onComplete,
+}) {
+  const [showExplanation, setShowExplanation] = useState(false);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, padding: 20 }}>
-      <style>{fontImport}</style>
-      <ChallengeShell onBack={() => {}} title="💰 Salary Challenge">
-        {!revealed ? (
-          <Card>
-            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-              <div style={{ fontSize: 32 }}>{scenario.avatar}</div>
-              <div>
-                <h2 style={{ margin: 0, fontFamily: font.display }}>{scenario.name}, {scenario.age}</h2>
-                <p style={{ margin: 0, color: C.muted }}>{scenario.job}</p>
-              </div>
-            </div>
-            <div style={{ marginTop: 20 }}>
-              <FactRow emoji="📍" label="Location" value={scenario.location} />
-              <FactRow emoji="💼" label="Experience" value={scenario.experience} />
-            </div>
-            <div style={{ marginTop: 24 }}>
-              <GuessSlider
-                min={2000} max={10000} step={100} value={guess} onChange={setGuess}
-                format={(v) => `$${v.toLocaleString()}`}
-              />
-            </div>
-            <Button variant="amber" style={{ width: "100%", marginTop: 20, justifyContent: "center" }} onClick={() => setRevealed(true)}>
-              Lock In Guess
-            </Button>
-          </Card>
+    <Card>
+      <div style={{ textAlign: "center" }}>
+        <Badge tone={score >= 70 ? "blue" : "amber"}>REVEAL</Badge>
+        <h2 style={{ fontFamily: font.display, fontWeight: 700, fontSize: 32, color: verdict.color, marginTop: 12 }}>
+          {verdict.label}
+        </h2>
+        <div style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 24 }}>
+          <div>
+            <div style={{ fontFamily: font.body, fontSize: 12, color: C.muted }}>Your Guess</div>
+            <BigNumber value={guessLabel} size={28} color={C.amber} />
+          </div>
+          <div style={{ borderRight: `1px solid ${C.border}` }} />
+          <div>
+            <div style={{ fontFamily: font.body, fontSize: 12, color: C.muted }}>Realistic Range</div>
+            <BigNumber value={rangeLabel} size={28} color={C.green} />
+          </div>
+        </div>
+
+        <div style={{ background: C.raised, borderRadius: 16, padding: 16, marginTop: 28, display: "inline-block", minWidth: 200 }}>
+          <div style={{ fontFamily: font.body, fontSize: 12, color: C.muted }}>Score Earned</div>
+          <BigNumber value={`+${score} XP`} size={32} color={C.blue} />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 28, borderTop: `1px solid ${C.border}`, paddingTop: 20 }}>
+        {!showExplanation ? (
+          <Button variant="ghost" style={{ width: "100%", justifyContent: "center" }} onClick={() => setShowExplanation(true)}>
+            {revealCta}
+          </Button>
         ) : (
-          <Card>
-            <h2 style={{ color: verdict.color }}>{verdict.label}</h2>
-            <p>Your Guess: ${guess.toLocaleString()}</p>
-            <p>Real Range: ${scenario.range[0]} - ${scenario.range[1]}</p>
-            <Button variant="ghost" onClick={() => setRevealed(false)}>Try Again</Button>
-          </Card>
+          <div style={{ background: C.raised, borderRadius: 12, padding: 18 }}>
+            <div style={{ fontFamily: font.display, fontWeight: 600, fontSize: 15, color: C.text, marginBottom: 8 }}>
+              💡 Why this number?
+            </div>
+            <p style={{ fontFamily: font.body, fontSize: 14, color: C.muted, lineHeight: 1.6, margin: 0 }}>
+              {explain}
+            </p>
+          </div>
         )}
-      </ChallengeShell>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+        <Button variant="ghost" style={{ flex: 1, justifyContent: "center" }} onClick={onPlayAgain}>
+          <RotateCcw size={16} /> Next Scenario
+        </Button>
+        <Button variant="amber" style={{ flex: 1, justifyContent: "center" }} onClick={onComplete}>
+          Claim Points & Continue
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------------------------------------------------
+   HEADER & NAVIGATION
+--------------------------------------------------------- */
+function Header({ xp, streak, onHome }) {
+  return (
+    <header style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "18px 32px", borderBottom: `1px solid ${C.border}`,
+      position: "sticky", top: 0, background: "rgba(59,50,180,0.75)",
+      backdropFilter: "blur(10px)", zIndex: 10,
+    }}>
+      <div onClick={onHome} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: 8, background: C.blue,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Calculator size={17} color="#fff" strokeWidth={2.5} />
+        </div>
+        <span style={{ fontFamily: font.display, fontWeight: 700, fontSize: 17, color: C.text, letterSpacing: -0.3 }}>
+          Life Calculator
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Flame size={16} color={C.amber} fill={streak > 0 ? C.amber : "none"} />
+          <span style={{ fontFamily: font.mono, fontSize: 14, color: C.text, fontWeight: 600 }}>{streak}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Star size={16} color={C.blue} fill={C.blue} />
+          <span style={{ fontFamily: font.mono, fontSize: 14, color: C.text, fontWeight: 600 }}>{xp} XP</span>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ---------------------------------------------------------
+   CALCULATORS & CHALLENGES
+--------------------------------------------------------- */
+function SalaryChallenge({ onBack, onComplete }) {
+  const [idx, setIdx] = useState(0);
+  const s = salaryScenarios[idx];
+  const [guess, setGuess] = useState(5000);
+  const [revealed, setRevealed] = useState(false);
+
+  const score = revealed ? scoreFromRange(guess, s.range) : 0;
+  const verdict = revealed ? verdictForScore(score) : null;
+
+  return (
+    <ChallengeShell onBack={onBack} title="💰 Salary Challenge" tone="amber">
+      {!revealed ? (
+        <Card>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ fontSize: 32 }}>{s.avatar}</div>
+            <div>
+              <div style={{ fontFamily: font.display, fontWeight: 700, fontSize: 20, color: C.text }}>{s.name}, {s.age}</div>
+              <div style={{ fontFamily: font.body, fontSize: 14, color: C.muted }}>{s.job}</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 20 }}>
+            <FactRow emoji="📍" label="Location" value={s.location} />
+            <FactRow emoji="💼" label="Experience" value={s.experience} />
+            <FactRow emoji="🎓" label="Education" value={s.education} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <GuessSlider min={1000} max={12000} step={100} value={guess} onChange={setGuess} format={(v) => `$${v.toLocaleString()}`} />
+          </div>
+          <Button variant="amber" style={{ marginTop: 22, width: "100%", justifyContent: "center" }} onClick={() => setRevealed(true)}>
+            🔒 Lock In My Guess
+          </Button>
+        </Card>
+      ) : (
+        <RevealScreen
+          guessLabel={`$${guess.toLocaleString()}`}
+          rangeLabel={`$${s.range[0].toLocaleString()} – $${s.range[1].toLocaleString()}`}
+          score={score}
+          verdict={verdict}
+          explain={s.explain}
+          revealCta="🔍 See where this number comes from"
+          onPlayAgain={() => { setIdx((idx + 1) % salaryScenarios.length); setRevealed(false); }}
+          onComplete={() => onComplete(score)}
+        />
+      )}
+    </ChallengeShell>
+  );
+}
+
+function TipCalculator({ onBack, onComplete }) {
+  const [bill, setBill] = useState("86");
+  const [tipPct, setTipPct] = useState(18);
+  const tip = (Number(bill) || 0) * (tipPct / 100);
+
+  return (
+    <ChallengeShell onBack={onBack} title="🧾 Tip Calculator" tone="blue">
+      <Card>
+        <NumberField label="Bill Amount" value={bill} onChange={setBill} prefix="$" />
+        <div style={{ marginTop: 18 }}>
+          <label style={{ fontFamily: font.body, fontSize: 13, color: C.muted, display: "block", marginBottom: 8 }}>Tip Percentage</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[15, 18, 20, 25].map((p) => (
+              <Button key={p} variant={tipPct === p ? "primary" : "ghost"} onClick={() => setTipPct(p)}>{p}%</Button>
+            ))}
+          </div>
+        </div>
+        <ResultGrid items={[
+          ["Tip Amount", `$${tip.toFixed(2)}`],
+          ["Total Bill", `$${((Number(bill) || 0) + tip).toFixed(2)}`],
+        ]} />
+      </Card>
+    </ChallengeShell>
+  );
+}
+
+function MortgageCalculator({ onBack }) {
+  const [price, setPrice] = useState("400000");
+  const [down, setDown] = useState("80000");
+  const [rate, setRate] = useState("6.5");
+
+  const monthly = useMemo(() => {
+    const p = (Number(price) || 0) - (Number(down) || 0);
+    const r = (Number(rate) || 0) / 100 / 12;
+    const n = 360;
+    if (!r) return p / n;
+    return (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }, [price, down, rate]);
+
+  return (
+    <ChallengeShell onBack={onBack} title="🏠 Mortgage Calculator" tone="blue">
+      <Card>
+        <NumberField label="Home Price" value={price} onChange={setPrice} prefix="$" />
+        <NumberField label="Down Payment" value={down} onChange={setDown} prefix="$" />
+        <NumberField label="Interest Rate" value={rate} onChange={setRate} suffix="%" />
+        <ResultGrid items={[
+          ["Monthly Payment", `$${(monthly || 0).toFixed(2)}`],
+        ]} />
+      </Card>
+    </ChallengeShell>
+  );
+}
+
+/* ---------------------------------------------------------
+   HOME SCREEN
+--------------------------------------------------------- */
+const calculators = [
+  { id: "salary", icon: Wallet, name: "Salary", desc: "Guess real-world salaries from a life profile", challenge: true },
+  { id: "tip", icon: Percent, name: "Tip Calculator", desc: "Split the bill and calculate standard tips", challenge: false },
+  { id: "mortgage", icon: Home, name: "Mortgage", desc: "Monthly payments & affordability", challenge: false },
+];
+
+function Home({ onNavigate }) {
+  return (
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 20px" }}>
+      <h1 style={{ fontFamily: font.display, fontSize: 36, color: C.text, marginBottom: 12 }}>
+        Real Life Calculators & Challenges
+      </h1>
+      <p style={{ fontFamily: font.body, color: C.muted, marginBottom: 32 }}> Choose a tool or play an intuition challenge: </p>
+      
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        {calculators.map((c) => (
+          <Card key={c.id} style={{ cursor: "pointer" }}>
+            <div onClick={() => onNavigate(c.id)}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <c.icon size={24} color={C.blue} />
+                {c.challenge && <Badge tone="amber">Challenge Mode</Badge>}
+              </div>
+              <h3 style={{ fontFamily: font.display, marginTop: 16, marginBottom: 8 }}>{c.name}</h3>
+              <p style={{ fontFamily: font.body, color: C.muted, fontSize: 14 }}>{c.desc}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------
+   APP MAIN CONTROLLER
+--------------------------------------------------------- */
+export default function App() {
+  const [view, setView] = useState("home");
+  const [xp, setXp] = useState(120);
+  const [streak, setStreak] = useState(3);
+
+  const handleComplete = useCallback((earnedXp) => {
+    setXp((prev) => prev + earnedXp);
+    setStreak((prev) => prev + 1);
+    setView("home");
+  }, []);
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, backgroundImage: C.bgGradient, color: C.text, fontFamily: font.body }}>
+      <style>{fontImport}</style>
+      <Header xp={xp} streak={streak} onHome={() => setView("home")} />
+
+      <main>
+        {view === "home" && <Home onNavigate={setView} />}
+        {view === "salary" && <SalaryChallenge onBack={() => setView("home")} onComplete={handleComplete} />}
+        {view === "tip" && <TipCalculator onBack={() => setView("home")} onComplete={handleComplete} />}
+        {view === "mortgage" && <MortgageCalculator onBack={() => setView("home")} />}
+      </main>
     </div>
   );
 }
