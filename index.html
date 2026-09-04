@@ -10,9 +10,6 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- טעינת אייקונים של Lucide -->
-  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap');
@@ -27,385 +24,88 @@
 <body>
   <div id="root"></div>
 
-  <script type="type/babel">
-    const { useState, useMemo, useCallback } = React;
+  <script type="text/babel">
+    const { useState } = React;
 
-    // הגדרת האייקונים עבור הרצה ישירה בדפדפן
-    const Calculator = () => <span>🧮</span>;
-    const TrendingUp = () => <span>📈</span>;
-    const Hotel = () => <span>🏨</span>;
-    const Percent = () => <span>%</span>;
-    const Clock = () => <span>⏰</span>;
-    const Cake = () => <span>🎂</span>;
-    const HomeIcon = () => <span>🏠</span>;
-    const Wallet = () => <span>👛</span>;
-    const PiggyBank = () => <span>🐖</span>;
-    const Coins = () => <span>🪙</span>;
-    const Receipt = () => <span>🧾</span>;
-    const Sparkles = () => <span>✨</span>;
-    const ArrowRight = () => <span>➡️</span>;
-    const ChevronLeft = () => <span>⬅️</span>;
-    const RotateCcw = () => <span>🔄</span>;
-    const Flame = () => <span>🔥</span>;
-    const Star = () => <span>⭐</span>;
-    const Target = () => <span>🎯</span>;
-    const MapPin = () => <span>📍</span>;
-    const Briefcase = () => <span>💼</span>;
-    const GraduationCap = () => <span>🎓</span>;
-    const Building2 = () => <span>🏢</span>;
-    const Users = () => <span>👥</span>;
-    const Check = () => <span>✅</span>;
-
-    /* ---------------------------------------------------------
-       DESIGN TOKENS
-    --------------------------------------------------------- */
     const C = {
       bg: "#4B3FCF",
-      bgGradient: "linear-gradient(160deg, #5B4EE8 0%, #4B3FCF 45%, #3A2FA8 100%)",
       surface: "#5A4EE0",
       raised: "#6C5FF0",
       border: "#7B6FF5",
       text: "#FFFFFF",
       muted: "#D4CFFF",
       blue: "#3FD1FF",
-      blueDim: "rgba(63,209,255,0.18)",
       amber: "#FF7A45",
-      amberDim: "rgba(255,122,69,0.2)",
       green: "#2FE0A0",
       red: "#FF5C7A",
     };
 
-    const font = {
-      display: "'Space Grotesk', sans-serif",
-      body: "'Inter', sans-serif",
-      mono: "'JetBrains Mono', monospace",
-    };
-
-    /* ---------------------------------------------------------
-       SCENARIO DATA
-    --------------------------------------------------------- */
-    const salaryScenarios = [
-      {
-        id: "s1",
-        name: "Alex",
-        age: 32,
-        avatar: "🧑‍💻",
-        job: "Software Engineer",
-        location: "Berlin, Germany",
-        experience: "7 years",
-        education: "BSc Computer Science",
-        industry: "Fintech scale-up",
-        companySize: "~180 employees",
-        lifestyle: "Rents a 1-bedroom apartment, cycles to work, takes 2 trips abroad a year",
-        schedule: "Standard 40h/week, hybrid",
-        range: [5400, 6600],
-        currency: "$",
-        period: "month",
-        explain: "Mid-senior engineers at funded fintech scale-ups in Berlin typically land in this band — experience and company stage matter more here than the city's average salary.",
-      },
-      {
-        id: "s2",
-        name: "Priya",
-        age: 26,
-        avatar: "👩‍⚕️",
-        job: "Registered Nurse",
-        location: "Manchester, UK",
-        experience: "3 years",
-        education: "BSc Nursing",
-        industry: "NHS Hospital Trust",
-        companySize: "Public sector, ~4,000 staff trust",
-        lifestyle: "Shares a flat with a roommate, works rotating shifts",
-        schedule: "37.5h/week, rotating shifts + occasional overtime",
-        range: [2350, 2650],
-        currency: "$",
-        period: "month",
-        explain: "NHS nursing pay bands are public and fairly narrow at this experience level — shift allowances add a bit on top of base band pay.",
-      },
-      {
-        id: "s3",
-        name: "Marco",
-        age: 41,
-        avatar: "👨‍🍳",
-        job: "Restaurant Owner",
-        location: "Lisbon, Portugal",
-        experience: "12 years running the business",
-        education: "Culinary school",
-        industry: "Independent restaurant, 40 covers",
-        companySize: "Owner-operator, 9 staff",
-        lifestyle: "Owns his apartment, reinvests heavily into the business",
-        schedule: "60+ hours/week, no fixed schedule",
-        range: [1800, 3200],
-        currency: "$",
-        period: "month",
-        explain: "Owner take-home from a small independent restaurant swings a lot month to month — this range reflects a stable-but-modest year, not a chain-level operation.",
-      },
-      {
-        id: "s4",
-        name: "Yuki",
-        age: 29,
-        avatar: "👩‍🎨",
-        job: "UX Designer",
-        location: "Austin, Texas",
-        experience: "5 years",
-        education: "BFA Design",
-        industry: "Series B SaaS startup",
-        companySize: "~90 employees",
-        lifestyle: "Rents a townhouse with a partner, drives a used car",
-        schedule: "Standard 40h/week, remote-first",
-        range: [7800, 9200],
-        currency: "$",
-        period: "month",
-        explain: "US tech salaries at funded startups run well above the same role in most other countries — Austin specifically has become a strong secondary tech market.",
-      },
-      {
-        id: "s5",
-        name: "Fatima",
-        age: 35,
-        avatar: "👩‍🏫",
-        job: "High School Teacher",
-        location: "Toronto, Canada",
-        experience: "9 years",
-        education: "B.Ed",
-        industry: "Public school board",
-        companySize: "Public sector",
-        lifestyle: "Owns a condo with a mortgage, one child",
-        schedule: "Standard school hours + grading/prep at home",
-        range: [5100, 5700],
-        currency: "$",
-        period: "month",
-        explain: "Public teacher pay follows a fixed grid based on years of experience and education level — very little variance for the same credentials.",
-      },
-    ];
-
-    const hotelScenarios = [
-      {
-        id: "h1",
-        guestName: "Sarah",
-        nights: 5,
-        pricePerNight: 240,
-        issue: "Her flight was delayed 9 hours and the room wasn't ready when she finally arrived at 1am.",
-        guestType: "Returning guest, has stayed 4 times before",
-        ask: "Politely asks the receptionist for some form of compensation.",
-        range: [8, 15],
-        explain: "A single-night inconvenience on a multi-night stay, from a loyal repeat guest, typically nets a partial-night or small percentage gesture — not a free stay, since the room delay wasn't the hotel's fault (flight delay) but the readiness issue was.",
-      },
-      {
-        id: "h2",
-        guestName: "Daniel",
-        nights: 2,
-        pricePerNight: 180,
-        issue: "The air conditioning in his room broke on the first night and it took maintenance until the next afternoon to fix.",
-        guestType: "First-time guest, booked via a discount site",
-        ask: "Requests to be moved or compensated, mentions he'll leave a review either way.",
-        range: [15, 25],
-        explain: "A full-night functional failure (not just delay) on a short 2-night stay is a bigger share of the total experience — most hotels would offer close to a full comped night or an equivalent percentage.",
-      },
-      {
-        id: "h3",
-        guestName: "The Chen family",
-        nights: 7,
-        pricePerNight: 310,
-        issue: "Construction noise from an adjacent room started at 8am each morning, disturbing their toddler's naps.",
-        guestType: "Loyalty program gold member, long stay",
-        ask: "Asks to be moved to a quieter room and requests a partial refund for the days affected.",
-        range: [5, 10],
-        explain: "On a long stay, a recurring-but-limited disturbance (not total room failure) usually gets a modest goodwill discount rather than a large percentage — especially once they're moved to fix the actual issue.",
-      },
-    ];
-
-    /* ---------------------------------------------------------
-       SCORING HELPERS
-    --------------------------------------------------------- */
-    function scoreFromRange(guess, [lo, hi]) {
-      if (guess >= lo && guess <= hi) {
-        const mid = (lo + hi) / 2;
-        const halfWidth = (hi - lo) / 2 || 1;
-        const distFromMid = Math.abs(guess - mid) / halfWidth;
-        return Math.round(100 - distFromMid * 15);
-      }
-      const edge = guess < lo ? lo : hi;
-      const distance = Math.abs(guess - edge);
-      const pctOff = distance / edge;
-      const score = 84 - pctOff * 180;
-      return Math.max(0, Math.round(score));
-    }
-
-    function verdictForScore(score) {
-      if (score >= 90) return { label: "Scary accurate.", color: C.green };
-      if (score >= 75) return { label: "Excellent guess.", color: C.green };
-      if (score >= 55) return { label: "Pretty solid.", color: C.amber };
-      if (score >= 35) return { label: "Not far off.", color: C.amber };
-      return { label: "Bold guess. Wrong, but bold.", color: C.red };
-    }
-
-    /* ---------------------------------------------------------
-       UI COMPONENTS
-    --------------------------------------------------------- */
-    function Badge({ children, tone = "blue" }) {
-      const map = {
-        blue: { bg: C.blueDim, fg: C.blue },
-        amber: { bg: C.amberDim, fg: C.amber },
-      };
-      const t = map[tone] || map.blue;
-      return (
-        <span style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          background: t.bg, color: t.fg, fontFamily: font.body,
-          fontSize: 12, fontWeight: 600, padding: "4px 10px",
-          borderRadius: 100,
-        }}>
-          {children}
-        </span>
-      );
-    }
-
-    function BigNumber({ value, size = 40, color = C.text }) {
-      return (
-        <span style={{ fontFamily: font.mono, fontWeight: 700, fontSize: size, color }}>
-          {value}
-        </span>
-      );
-    }
-
-    function Button({ children, onClick, variant = "primary", style = {} }) {
-      const base = {
-        fontFamily: font.body, fontWeight: 600, fontSize: 15,
-        padding: "13px 24px", borderRadius: 12, border: "none",
-        cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8,
-      };
-      const variants = {
+    function Button({ children, onClick, variant = "primary" }) {
+      const styles = {
         primary: { background: C.blue, color: "#fff" },
         amber: { background: C.amber, color: "#1A1200" },
-        ghost: { background: "transparent", color: C.text, border: `1px solid ${C.border}` },
+        ghost: { background: "transparent", color: C.text, border: `1px solid ${C.border}` }
       };
       return (
-        <button onClick={onClick} style={{ ...base, ...variants[variant], ...style }}>
+        <button 
+          onClick={onClick} 
+          style={{ padding: "12px 24px", borderRadius: 12, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 15, ...styles[variant] }}>
           {children}
         </button>
       );
     }
 
-    function Card({ children, style = {} }) {
+    function Card({ children }) {
       return (
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 28, ...style }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: 28, marginTop: 20 }}>
           {children}
         </div>
       );
     }
 
-    function FactRow({ emoji, label, value }) {
-      return (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontSize: 17, width: 16 }}>{emoji}</span>
-          <span style={{ fontFamily: font.body, fontSize: 13, color: C.muted, width: 110 }}>{label}</span>
-          <span style={{ fontFamily: font.body, fontSize: 14, color: C.text, fontWeight: 500 }}>{value}</span>
-        </div>
-      );
-    }
-
-    function GuessSlider({ min, max, step, value, onChange, format }) {
-      return (
-        <div>
-          <div style={{ textAlign: "center", marginBottom: 14 }}>
-            <BigNumber value={format(value)} size={34} color={C.amber} />
-          </div>
-          <input
-            type="range" min={min} max={max} step={step} value={value}
-            onChange={(e) => onChange(Number(e.target.value))}
-            style={{ width: "100%", accentColor: C.amber, height: 6, cursor: "pointer" }}
-          />
-        </div>
-      );
-    }
-
-    /* ---------------------------------------------------------
-       MAIN APP
-    --------------------------------------------------------- */
     function App() {
       const [view, setView] = useState("home");
-      const [xp, setXp] = useState(120);
-      const [streak, setStreak] = useState(3);
+      const [guess, setGuess] = useState(6000);
 
       return (
         <div style={{ minHeight: "100vh", background: C.bg, color: C.text }}>
-          {/* Header */}
-          <header style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "18px 32px", borderBottom: `1px solid ${C.border}`,
-            background: "rgba(59,50,180,0.75)", backdropFilter: "blur(10px)",
-          }}>
-            <div onClick={() => setView("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: C.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Calculator />
-              </div>
-              <span style={{ fontFamily: font.display, fontWeight: 700, fontSize: 17 }}>Life Calculator</span>
+          <header style={{ display: "flex", justifyContent: "space-between", padding: "18px 32px", borderBottom: `1px solid ${C.border}` }}>
+            <div onClick={() => setView("home")} style={{ cursor: "pointer", fontWeight: 700, fontSize: 18 }}>
+              🧮 Life Calculator
             </div>
-            <div style={{ display: "flex", gap: 20 }}>
-              <span>🔥 {streak}</span>
-              <span>⭐ {xp} XP</span>
+            <div style={{ display: "flex", gap: 15 }}>
+              <span>🔥 3</span>
+              <span>⭐ 120 XP</span>
             </div>
           </header>
 
-          {/* Main Body */}
-          <main style={{ maxWidth: 1000, margin: "40px auto", padding: "0 20px" }}>
-            {view === "home" && (
-              <div>
-                <section style={{ textAlign: "center", margin: "40px 0" }}>
-                  <h1 style={{ fontFamily: font.display, fontSize: 48, fontWeight: 700 }}>Can you calculate real life?</h1>
-                  <p style={{ color: C.muted, fontSize: 18, marginTop: 10 }}>Money, negotiations and everyday decisions turned into a game.</p>
-                  <div style={{ marginTop: 24, display: "flex", justifyContent: "center", gap: 12 }}>
-                    <Button variant="amber" onClick={() => setView("salary")}>Start Salary Challenge <ArrowRight /></Button>
-                  </div>
-                </section>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, marginTop: 40 }}>
-                  <Card style={{ cursor: "pointer" }} onClick={() => setView("salary")}>
-                    <Badge tone="amber">CHALLENGE</Badge>
-                    <h3 style={{ fontSize: 22, marginTop: 10 }}>💰 Salary Challenge</h3>
-                    <p style={{ color: C.muted, marginTop: 6 }}>Guess real-world salaries based on lifestyle and career clues.</p>
-                  </Card>
-
-                  <Card style={{ cursor: "pointer" }} onClick={() => setView("hotel")}>
-                    <Badge tone="amber">CHALLENGE</Badge>
-                    <h3 style={{ fontSize: 22, marginTop: 10 }}>🏨 Hotel Discount</h3>
-                    <p style={{ color: C.muted, marginTop: 6 }}>Calculate fair refunds and compensation like a front-desk manager.</p>
-                  </Card>
+          <main style={{ maxWidth: 800, margin: "40px auto", padding: "0 20px" }}>
+            {view === "home" ? (
+              <div style={{ textAlign: "center" }}>
+                <h1 style={{ fontSize: 44, fontWeight: 700 }}>Can you calculate real life?</h1>
+                <p style={{ color: C.muted, fontSize: 18, marginTop: 10 }}>Money, negotiations and everyday decisions turned into a game.</p>
+                <div style={{ marginTop: 24 }}>
+                  <Button variant="amber" onClick={() => setView("salary")}>Start Salary Challenge ➡️</Button>
                 </div>
               </div>
-            )}
-
-            {view === "salary" && (
+            ) : (
               <Card>
-                <Button variant="ghost" onClick={() => setView("home")} style={{ marginBottom: 20 }}>
-                  <ChevronLeft /> Back
-                </Button>
-                <h2>💰 Salary Challenge</h2>
-                <FactRow emoji="🧑‍💻" label="Profile" value={`${salaryScenarios[0].name}, ${salaryScenarios[0].job}`} />
-                <FactRow emoji="📍" label="Location" value={salaryScenarios[0].location} />
-                <FactRow emoji="💼" label="Experience" value={salaryScenarios[0].experience} />
+                <Button variant="ghost" onClick={() => setView("home")}>⬅️ Back</Button>
+                <h2 style={{ fontSize: 24, marginTop: 15 }}>💰 Salary Challenge</h2>
+                <p style={{ color: C.muted }}>How much does Alex (Software Engineer, Berlin) earn?</p>
                 
-                <div style={{ marginTop: 30 }}>
-                  <h3>How much do they earn monthly?</h3>
-                  <GuessSlider min={2000} max={12000} step={100} value={5500} onChange={() => {}} format={(v) => `$${v}`} />
-                  <Button variant="amber" style={{ width: "100%", justifyContent: "center", marginTop: 20 }}>
-                    🔒 Lock In My Guess
-                  </Button>
+                <div style={{ margin: "30px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: 36, fontWeight: 700, color: C.amber }}>${guess.toLocaleString()}</div>
+                  <input 
+                    type="range" min="3000" max="10000" step="100" value={guess} 
+                    onChange={(e) => setGuess(Number(e.target.value))}
+                    style={{ width: "100%", marginTop: 15, accentColor: C.amber }}
+                  />
                 </div>
-              </Card>
-            )}
 
-            {view === "hotel" && (
-              <Card>
-                <Button variant="ghost" onClick={() => setView("home")} style={{ marginBottom: 20 }}>
-                  <ChevronLeft /> Back
+                <Button variant="amber" onClick={() => alert("Correct range: $5,400 - $6,600!")} style={{ width: "100%" }}>
+                  🔒 Lock In My Guess
                 </Button>
-                <h2>🏨 Hotel Compensation</h2>
-                <p style={{ color: C.muted, marginTop: 10 }}>{hotelScenarios[0].issue}</p>
-                <div style={{ marginTop: 30 }}>
-                  <Button variant="amber" style={{ width: "100%", justifyContent: "center" }}>
-                    Submit Discount Offer
-                  </Button>
-                </div>
               </Card>
             )}
           </main>
@@ -413,7 +113,8 @@
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
